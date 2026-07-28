@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Control Panel - Universal API Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a1a;
+            color: #ffffff;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(10, 10, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #a0aec0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+        }
+
+        .signup-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .signup-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 4rem;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 0.5rem 1.5rem;
+            border-radius: 3rem;
+            font-size: 0.9rem;
+            color: #a78bfa;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            background-size: 300% 300%;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: #a0aec0;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.7);
+        }
+
+        .secondary-btn {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 2.5rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .secondary-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 1.1rem;
+            margin-bottom: 4rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            color: #a0aec0;
+            line-height: 1.7;
+        }
+
+        /* API Types Section */
+        .api-types {
+            padding: 6rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .api-types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .api-type-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.2rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .api-type-card:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .api-type-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .api-type-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 6rem 4rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Testimonial Section */
+        .testimonial {
+            padding: 6rem 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            padding: 3rem;
+        }
+
+        .testimonial-text {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #cbd5e0;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: #a78bfa;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 6rem 4rem;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-description {
+            color: #a0aec0;
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 3rem 4rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a0aec0;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem 1.5rem;
+            }
+            .hero {
+                padding: 4rem 1.5rem;
+            }
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            .features, .api-types, .testimonial, .cta {
+                padding: 4rem 1.5rem;
+            }
+            .section-title {
+                font-size: 2rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div class="content">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="logo">
+                <span class="logo-icon">🔮</span> API Hub
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#api-types" class="nav-link">API Types</a>
+                <a href="#stats" class="nav-link">Stats</a>
+                <a href="https://yours-website.blogspot.com/?id=55MPPAt8v2hNo8ZHFcFJ" class="signup-btn" target="_blank">Get Started Free</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">🚀 Universal API Management Platform</div>
+            <h1 class="hero-title">
+                Manage All Your APIs in<br>
+                <span class="gradient-text">One Beautiful Place</span>
+            </h1>
+            <p class="hero-subtitle">
+                Store, organize, and manage every type of API credentials securely. 
+                From Firebase to AWS, REST to GraphQL, keep all your API keys organized 
+                with powerful search, filtering, and monitoring capabilities.
+            </p>
+            <div class="hero-buttons">
+                <a href="https://yours-website.blogspot.com/?id=55MPPAt8v2hNo8ZHFcFJ" class="primary-btn" target="_blank">
+                    Start Managing APIs Now →
+                </a>
+                <a href="#features" class="secondary-btn">Explore Features</a>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <h2 class="section-title">Powerful Features for <span class="gradient-text">API Management</span></h2>
+            <p class="section-subtitle">Everything you need to keep your API credentials secure, organized, and accessible</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🔐</span>
+                    <h3 class="feature-title">Secure Storage</h3>
+                    <p class="feature-description">
+                        Your API keys and credentials are stored securely with Firebase authentication. 
+                        Only you can access your stored APIs with email verification and password protection.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🌐</span>
+                    <h3 class="feature-title">Universal API Support</h3>
+                    <p class="feature-description">
+                        Store any type of API credentials - Firebase, AWS, Azure, Google Cloud, Stripe, 
+                        Twilio, GitHub, OpenAI, REST APIs, GraphQL endpoints, and many more.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🔍</span>
+                    <h3 class="feature-title">Smart Search & Filter</h3>
+                    <p class="feature-description">
+                        Quickly find any API by name, type, endpoint, or description. 
+                        Filter by API category to instantly locate what you need from hundreds of stored credentials.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3 class="feature-title">Status Tracking</h3>
+                    <p class="feature-description">
+                        Monitor the status of each API with Active, Testing, or Inactive labels. 
+                        Keep track of which APIs are production-ready and which are under development.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📱</span>
+                    <h3 class="feature-title">Responsive Design</h3>
+                    <p class="feature-description">
+                        Access your API dashboard from any device - desktop, tablet, or mobile. 
+                        The interface adapts beautifully to any screen size for seamless management on the go.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📝</span>
+                    <h3 class="feature-title">Detailed Notes</h3>
+                    <p class="feature-description">
+                        Add descriptions, usage notes, and documentation links to each API. 
+                        Never forget how to use an API or where to find its documentation again.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Types Section -->
+        <section class="api-types" id="api-types">
+            <h2 class="section-title">Supports <span class="gradient-text">All API Types</span></h2>
+            <p class="section-subtitle">No matter what service you use, we've got you covered</p>
+            
+            <div class="api-types-grid">
+                <div class="api-type-card">
+                    <div class="api-type-icon">🔥</div>
+                    <div class="api-type-name">Firebase</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">☁️</div>
+                    <div class="api-type-name">AWS Services</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">🔷</div>
+                    <div class="api-type-name">Azure</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">🌍</div>
+                    <div class="api-type-name">REST API</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">🕸️</div>
+                    <div class="api-type-name">GraphQL</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">💳</div>
+                    <div class="api-type-name">Stripe</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">📧</div>
+                    <div class="api-type-name">SendGrid</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">💬</div>
+                    <div class="api-type-name">Twilio</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">🐙</div>
+                    <div class="api-type-name">GitHub</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">🤖</div>
+                    <div class="api-type-name">OpenAI</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">🔧</div>
+                    <div class="api-type-name">Custom APIs</div>
+                </div>
+                <div class="api-type-card">
+                    <div class="api-type-icon">☁️</div>
+                    <div class="api-type-name">Google Cloud</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats" id="stats">
+            <div class="stats-grid">
+                <div>
+                    <div class="stat-number">12+</div>
+                    <div class="stat-label">API Types Supported</div>
+                </div>
+                <div>
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Secure Storage</div>
+                </div>
+                <div>
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Access Anywhere</div>
+                </div>
+                <div>
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Unlimited APIs</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonial Section -->
+        <section class="testimonial">
+            <div class="testimonial-card">
+                <p class="testimonial-text">
+                    "This API control panel has completely transformed how I manage my development workflow. 
+                    Having all my API keys in one secure, searchable place saves me hours every week. 
+                    The universal support for any API type means I can store everything from my Firebase configs 
+                    to my Stripe keys without switching between multiple tools."
+                </p>
+                <p class="testimonial-author">— A Developer Who Loves Organized APIs</p>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <h2 class="cta-title">Ready to <span class="gradient-text">Organize Your APIs?</span></h2>
+            <p class="cta-description">
+                Join thousands of developers who are managing their API credentials efficiently. 
+                Sign up now and start organizing all your APIs in one secure, beautiful dashboard.
+            </p>
+            <a href="https://yours-website.blogspot.com/?id=55MPPAt8v2hNo8ZHFcFJ" class="primary-btn" target="_blank" style="font-size: 1.2rem; padding: 1.2rem 3rem;">
+                Get Started Free → 
+            </a>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2024 API Hub - Universal API Control Panel. All rights reserved.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                Secure • Organized • Universal
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Three.js 3D Background Animation
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+        
+        // Create particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 800;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorArray = new Float32Array(particlesCount * 3);
+        
+        for (let i = 0; i < particlesCount * 3; i += 3) {
+            posArray[i] = (Math.random() - 0.5) * 15;
+            posArray[i + 1] = (Math.random() - 0.5) * 15;
+            posArray[i + 2] = (Math.random() - 0.5) * 15;
+            
+            // Purple to blue gradient colors
+            colorArray[i] = 0.4 + Math.random() * 0.3;     // R
+            colorArray[i + 1] = 0.3 + Math.random() * 0.3;  // G
+            colorArray[i + 2] = 0.7 + Math.random() * 0.3;  // B
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.02,
+            vertexColors: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.8,
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        
+        // Create floating geometric shapes
+        const shapes = [];
+        const geometries = [
+            new THREE.IcosahedronGeometry(0.3, 0),
+            new THREE.OctahedronGeometry(0.25, 0),
+            new THREE.TetrahedronGeometry(0.2, 0),
+            new THREE.DodecahedronGeometry(0.2, 0),
+        ];
+        
+        for (let i = 0; i < 15; i++) {
+            const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+            const material = new THREE.MeshPhongMaterial({
+                color: new THREE.Color().setHSL(0.7 + Math.random() * 0.2, 0.8, 0.6),
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true,
+            });
+            
+            const shape = new THREE.Mesh(geometry, material);
+            shape.position.x = (Math.random() - 0.5) * 12;
+            shape.position.y = (Math.random() - 0.5) * 12;
+            shape.position.z = (Math.random() - 0.5) * 8;
+            shape.rotation.x = Math.random() * Math.PI;
+            shape.rotation.y = Math.random() * Math.PI;
+            
+            shape.userData = {
+                speedX: (Math.random() - 0.5) * 0.005,
+                speedY: (Math.random() - 0.5) * 0.005,
+                speedZ: (Math.random() - 0.5) * 0.005,
+                rotX: (Math.random() - 0.5) * 0.01,
+                rotY: (Math.random() - 0.5) * 0.01,
+            };
+            
+            shapes.push(shape);
+            scene.add(shape);
+        }
+        
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+        scene.add(ambientLight);
+        
+        // Add point lights
+        const pointLight1 = new THREE.PointLight(0x667eea, 1, 20);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+        
+        const pointLight2 = new THREE.PointLight(0x764ba2, 1, 20);
+        pointLight2.position.set(-5, -5, -5);
+        scene.add(pointLight2);
+        
+        camera.position.z = 5;
+        
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate particles
+            particlesMesh.rotation.x += 0.0003;
+            particlesMesh.rotation.y += 0.0005;
+            
+            // Animate shapes
+            shapes.forEach(shape => {
+                shape.rotation.x += shape.userData.rotX;
+                shape.rotation.y += shape.userData.rotY;
+                
+                shape.position.x += shape.userData.speedX;
+                shape.position.y += shape.userData.speedY;
+                shape.position.z += shape.userData.speedZ;
+                
+                // Bounce shapes off boundaries
+                if (Math.abs(shape.position.x) > 6) shape.userData.speedX *= -1;
+                if (Math.abs(shape.position.y) > 6) shape.userData.speedY *= -1;
+                if (Math.abs(shape.position.z) > 4) shape.userData.speedZ *= -1;
+            });
+            
+            // Move camera based on mouse
+            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.05;
+            camera.position.y += (mouseY * 0.3 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+            
+            // Animate lights
+            pointLight1.intensity = 1 + Math.sin(Date.now() * 0.001) * 0.3;
+            pointLight2.intensity = 1 + Math.cos(Date.now() * 0.001) * 0.3;
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Start animation
+        animate();
+        
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Observe feature cards
+        document.querySelectorAll('.feature-card, .api-type-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease-out';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
